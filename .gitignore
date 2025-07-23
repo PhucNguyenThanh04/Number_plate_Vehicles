@@ -1,0 +1,5 @@
+# Ignore dataset and CSV
+*.csv
+Dataset/
+test/
+__pycache__/
