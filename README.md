@@ -60,7 +60,7 @@ Put the following pretrained models inside the `models/` directory:
 Run the main program to detect and track vehicles + plates in a video:
 
 ```bash
-python src/detect.py --video data/videos/out.mp4
+python .\visualizetation.py --input_video path_video.mp4 --csv filename.csv --csv_full filename.csv
 ```
 
 > Output will be visualized in real time and saved as `out_full.mp4`.
