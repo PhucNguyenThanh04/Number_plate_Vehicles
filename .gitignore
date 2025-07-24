@@ -3,3 +3,6 @@
 Dataset/
 test/
 __pycache__/
+out.mp4
+testmodel.py
+license_plates
