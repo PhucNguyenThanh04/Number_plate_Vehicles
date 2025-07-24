@@ -31,13 +31,14 @@ from ultralytics import YOLO
 model = YOLO("./model/finetune_v8_vehicles.pt")  # hoặc yolov8n_custom.pt nếu bạn fine-tune
 
 # Load video
-cap = cv2.VideoCapture("test/car.mp4")  # đường dẫn video
+cap = cv2.VideoCapture("test/car2.mp4")  # đường dẫn video
 fps = cap.get(cv2.CAP_PROP_FPS)
 w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-
+fr = -1
 while True:
     ret, frame = cap.read()
+    fr +=1
     if not ret:
         break
 
@@ -57,12 +58,14 @@ while True:
                     cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
 
     # Hiển thị frame sau khi vẽ
-    frame = cv2.resize(frame, (1280, 720))
+    frame = cv2.resize(frame, (w//3, h//3))
     cv2.imshow("YOLOv8 Detection", frame)
 
     # Nhấn Q để thoát
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break
+
+print(fr)
 
 cap.release()
 cv2.destroyAllWindows()
