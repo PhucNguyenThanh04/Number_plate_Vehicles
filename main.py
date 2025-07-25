@@ -43,12 +43,10 @@ def main():
     cap = cv2.VideoCapture(args.input_video)
 
     writer_bbx(cap, args.csv)
-    print("xong main")
 
     load_write(args.csv, args.csv_full)
-    print("add ")
 
-    results = pd.read_csv(args.csv)
+    results = pd.read_csv(args.csv_full)
 
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Specify the codec
     fps = cap.get(cv2.CAP_PROP_FPS)
