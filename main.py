@@ -41,13 +41,14 @@ def main():
     args = get_args()
     # Load dữ liệu từ file CSV
     cap = cv2.VideoCapture(args.input_video)
+
     writer_bbx(cap, args.csv)
     print("xong main")
 
     load_write(args.csv, args.csv_full)
     print("add ")
 
-    results = pd.read_csv(args.csv_full)
+    results = pd.read_csv(args.csv)
 
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Specify the codec
     fps = cap.get(cv2.CAP_PROP_FPS)
@@ -57,24 +58,38 @@ def main():
 
     license_plate = {}
     for car_id in np.unique(results['car_id']):
-        max_ = np.amax(results[results['car_id'] == car_id]['license_number_score'])
-        license_plate[car_id] = {'license_crop': None,
-                                 'license_plate_number': results[(results['car_id'] == car_id) &
-                                                                 (results['license_number_score'] == max_)][
-                                     'license_number'].iloc[0]}
-        cap.set(cv2.CAP_PROP_POS_FRAMES, results[(results['car_id'] == car_id) &
-                                                 (results['license_number_score'] == max_)]['frame_nmr'].iloc[0])
-        ret, frame = cap.read()
+        filtered = results[results['car_id'] == car_id]
+        if filtered.empty:
+            continue
 
-        x1, y1, x2, y2 = ast.literal_eval(results[(results['car_id'] == car_id) &
-                                                  (results['license_number_score'] == max_)]['license_plate_bbox'].iloc[
-                                              0].replace('[ ', '[').replace('   ', ' ').replace('  ', ' ').replace(' ',
-                                                                                                                   ','))
+        max_ = filtered['license_number_score'].max()
+        best_rows = filtered[filtered['license_number_score'] == max_]
 
-        license_crop = frame[int(y1):int(y2), int(x1):int(x2), :]
-        license_crop = cv2.resize(license_crop, (int((x2 - x1) * 400 / (y2 - y1)), 400))
+        if best_rows.empty:
+            license_plate[car_id] = {'license_crop': None, 'license_plate_number': "UNKNOWN"}
+            continue
 
-        license_plate[car_id]['license_crop'] = license_crop
+        try:
+            license_plate_number = best_rows['license_number'].iloc[0]
+            license_plate[car_id] = {'license_crop': None, 'license_plate_number': license_plate_number}
+
+            # Lấy frame và crop license plate
+            frame_index = best_rows['frame_nmr'].iloc[0]
+            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
+            ret, frame = cap.read()
+
+            bbox_str = best_rows['license_plate_bbox'].iloc[0]
+            x1, y1, x2, y2 = ast.literal_eval(
+                bbox_str.replace('[ ', '[').replace('   ', ' ').replace('  ', ' ').replace(' ', ',')
+            )
+
+            license_crop = frame[int(y1):int(y2), int(x1):int(x2), :]
+            license_crop = cv2.resize(license_crop, (int((x2 - x1) * 400 / (y2 - y1)), 400))
+            license_plate[car_id]['license_crop'] = license_crop
+
+        except Exception as e:
+            print(f"Error processing car_id={car_id}: {e}")
+            license_plate[car_id] = {'license_crop': None, 'license_plate_number': "UNKNOWN"}
 
     frame_nmr = -1
 
@@ -104,8 +119,8 @@ def main():
 
                 # crop license plate
                 license_crop = license_plate[df_.iloc[row_indx]['car_id']]['license_crop']
-
-                H, W, _ = license_crop.shape
+                if license_crop is not None:
+                    H, W, _ = license_crop.shape
 
                 try:
                     frame[int(car_y1) - H - 100:int(car_y1) - 100,
