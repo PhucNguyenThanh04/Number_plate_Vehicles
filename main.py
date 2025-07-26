@@ -3,6 +3,9 @@ import cv2
 import numpy as np
 import pandas as pd
 from argparse import ArgumentParser
+from tqdm import tqdm
+from requests_toolbelt.multipart.encoder import total_len
+
 from detect import writer_bbx
 from add_missing_data import load_write, interpolate_bounding_boxes
 
@@ -53,9 +56,10 @@ def main():
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     out = cv2.VideoWriter('./out.mp4', fourcc, fps, (width, height))
-
+    process_bar = tqdm(total = len(np.unique(results['car_id'])), colour= "red", desc="load data")
     license_plate = {}
     for car_id in np.unique(results['car_id']):
+        process_bar.update(1)
         filtered = results[results['car_id'] == car_id]
         if filtered.empty:
             continue
@@ -88,6 +92,8 @@ def main():
         except Exception as e:
             print(f"Error processing car_id={car_id}: {e}")
             license_plate[car_id] = {'license_crop': None, 'license_plate_number': "UNKNOWN"}
+
+
 
     frame_nmr = -1
 

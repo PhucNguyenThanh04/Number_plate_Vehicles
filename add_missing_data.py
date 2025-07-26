@@ -15,7 +15,7 @@ def interpolate_bounding_boxes(data):
     for car_id in unique_car_ids:
 
         frame_numbers_ = [p['frame_nmr'] for p in data if int(float(p['car_id'])) == int(float(car_id))]
-        print(frame_numbers_, car_id)
+        # print(frame_numbers_, car_id)
 
         # Filter data for a specific car ID
         car_mask = car_ids == car_id
